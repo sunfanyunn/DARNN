@@ -305,7 +305,7 @@ if __name__ == '__main__':
     # datasets = datasets[::-1]
     import sys
     datasets = [sys.argv[1]]
-    horizons = [sys.argv[2]]
+    horizons = [int(sys.argv[2])]
     print(datasets, horizons)
     #horizons = [3, 6, 12, 24]
 
