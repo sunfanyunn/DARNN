@@ -25,7 +25,7 @@ class Input_data:
         # minutes = 1
 
         sz = self.data.shape[0]
-        train_size = int(sz * .7)
+        train_size = int(sz * .6)
         val_size = int(sz * .8)
 
         self.train = self.data[0:train_size, :]

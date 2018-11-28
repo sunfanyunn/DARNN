@@ -106,21 +106,24 @@ def go(dataset, horizon):
     learning_rate = 0.001
     training_iters = 1000000
     batch_size  = 128
-    display_step = 30676//batch_size
+
     model_path = './{}_model/'.format(dataset)
     filename = './data/{}/{}.txt'.format(dataset, dataset)
+    df = pd.read_csv(filename,header=None)
+    display_step = int(df.shape[0]*.8)//batch_size
     
+    timestep = 10
     # Network Parameters
     # encoder parameter
-    num_feature =  pd.read_csv(filename).shape[1]-1 # number of index  #98 #72
+    num_feature =  df.shape[1]-1 # number of index  #98 #72
     n_input_encoder =  num_feature # n_feature of encoder input  #98 #72
-    n_steps_encoder = 8*24 # time steps 
+    n_steps_encoder = timestep# time steps 
     # n_hidden_encoder = 256 # size of hidden units 
     n_hidden_encoder = 64
     
     # decoder parameter
     n_input_decoder = 1
-    n_steps_decoder = 1
+    n_steps_decoder = timestep-1
     # n_hidden_decoder = 256 
     n_hidden_decoder = 64
     n_classes = 1 # size of the decoder output
@@ -131,7 +134,8 @@ def go(dataset, horizon):
 
     all_y_test = []
     all_y_pred = []
-    for i in range(min(num_feature+1, 10)):
+    for i in range(num_feature):
+        print('predicting {} series out of {}'.format(i, num_feature))
 
         tf.reset_default_graph()
         # Parameters
@@ -141,7 +145,6 @@ def go(dataset, horizon):
         decoder_input = tf.placeholder("float", [None, n_steps_decoder, n_input_decoder])
         decoder_gt = tf.placeholder("float", [None, n_classes])
         encoder_attention_states = tf.placeholder("float", [None, n_input_encoder, n_steps_encoder])
-        
         # Define weights
         weights = {'out1': tf.Variable(tf.random_normal([n_hidden_decoder, n_classes]))}
         biases = {'out1': tf.Variable(tf.random_normal([n_classes]))}
@@ -174,7 +177,7 @@ def go(dataset, horizon):
             sess.run(init)
             step = 1
             count = 1
-            epochs = 5
+            epochs = 50
         
             Data = GD.Input_data(batch_size, n_steps_encoder, n_steps_decoder, n_hidden_encoder, i, filename, n_classes, horizon)
 
@@ -196,8 +199,7 @@ def go(dataset, horizon):
                         break
 
                     loss = sess.run(cost, feed_dict)/batch_size
-                    # print "Epoch", step % display_step
-                    print "Iter " + str(step) + ", Minibatch Loss= " + "{:.6f}".format(loss)
+                    print "Epoch", step //display_step, ", Minibatch Loss= " + "{:.6f}".format(loss)
         
                     #store the value
                     loss_value.append(loss)
@@ -209,18 +211,18 @@ def go(dataset, horizon):
                                 encoder_attention_states:encoder_states_val}
                     loss_val1 = sess.run(cost, feed_dict)/len(val_y)
                     loss_val.append(loss_val1)
-                    print "validation loss:", loss_val1
+                    # print "validation loss:", loss_val1
 
                     # testing
                     test_x, test_y, test_prev_y, encoder_states_test= Data.testing()
-                    print(test_x.shape)
-                    print(test_y.shape)
+                    # print(test_x.shape)
+                    # print(test_y.shape)
                     feed_dict = {encoder_input: test_x, decoder_gt: test_y, decoder_input: test_prev_y,
                                 encoder_attention_states:encoder_states_test}
                     pred_y=sess.run(pred, feed_dict)
                     loss_test1 = sess.run(cost, feed_dict)/len(test_y)
                     loss_test.append(loss_test1)
-                    print "Testing loss:", loss_test1
+                    # print "Testing loss:", loss_test1
         
                     #save the parameters
                     # if loss_val1<=min(loss_val):
@@ -234,13 +236,13 @@ def go(dataset, horizon):
                     pred_result = pred_y*stdev[num_feature] + mean[num_feature]
                     
         
-                    print "testing data:"
-                    print testing_result
-                    print testing_result.shape
+                    # print "testing data:"
+                    # print testing_result
+                    # print testing_result.shape
         
-                    print "pred data:"
-                    print pred_result
-                    print pred_result.shape
+                    # print "pred data:"
+                    # print pred_result
+                    # print pred_result.shape
                     # from sklearn.utils import check_arrays
         
                     if loss_val1 < mn_validation_loss:
@@ -255,11 +257,11 @@ def go(dataset, horizon):
                         maes.append(mae)
 
                         rmse = np.sqrt(mean_squared_error(testing_result, pred_result))
-                        print('rmse', rmse)
+                        # print('rmse', rmse)
                         rmses.append(rmse)
 
                         mape = mean_absolute_percentage_error(testing_result, pred_result)
-                        print('mape', mape)
+                        # print('mape', mape)
                         mapes.append(mape)
 
         
@@ -277,6 +279,11 @@ def go(dataset, horizon):
             all_y_test.append(ret_y_test.flatten())
             print(np.array(all_y_pred).shape)
             print(np.array(all_y_test).shape)
+
+            rrse = rrse_(np.array(all_y_test), np.array(all_y_pred))
+            corr = CORR(np.array(all_y_test) ,np.array(all_y_pred))
+            print('current score', rrse, corr)
+
             # ret_maes.append(min(maes))
             # ret_rmses.append(min(rmses))
             # ret_mapes.append(min(mapes))
