@@ -199,7 +199,7 @@ def go(dataset, horizon):
                         break
 
                     loss = sess.run(cost, feed_dict)/batch_size
-                    print "Epoch", step //display_step, ", Minibatch Loss= " + "{:.6f}".format(loss)
+                    print ("Epoch", step //display_step, ", Minibatch Loss= " + "{:.6f}".format(loss))
         
                     #store the value
                     loss_value.append(loss)
@@ -274,7 +274,7 @@ def go(dataset, horizon):
                     count = 0
                     # save_path = saver.save(sess, model_path  + 'dual_stage_' + str(step) + '.ckpt')
         
-            print "Optimization Finished!"
+            print ("Optimization Finished!")
             all_y_pred.append(ret_y_pred.flatten())
             all_y_test.append(ret_y_test.flatten())
             print(np.array(all_y_pred).shape)
@@ -300,13 +300,16 @@ def go(dataset, horizon):
     return np.array(all_y_pred), np.array(all_y_test)
 
 if __name__ == '__main__':
-    datasets = ['electricity', 'exchange_rate', 'solar-energy', 'traffic']
+    # datasets = ['electricity', 'exchange_rate', 'solar-energy', 'traffic']
     # datasets = datasets[1:]
     # datasets = datasets[::-1]
-    print(datasets)
-    horizons = [3, 6, 12, 24]
+    import sys
+    datasets = [sys.argv[1]]
+    horizons = [sys.argv[2]]
+    print(datasets, horizons)
+    #horizons = [3, 6, 12, 24]
 
-    f = open('log2', 'a+')
+    f = open('log', 'a+')
     f.write('dataset,horizon,mae,rmse,mape\n')
     for dataset in datasets:
         for horizon in horizons:
