@@ -163,7 +163,7 @@ def go(dataset, horizon):
         saver = tf.train.Saver()
         loss_value = []
         step_value = []
-        loss_test=[]
+#        loss_test=[]
         loss_val = []
 
         maes = []
@@ -211,59 +211,27 @@ def go(dataset, horizon):
                                 encoder_attention_states:encoder_states_val}
                     loss_val1 = sess.run(cost, feed_dict)/len(val_y)
                     loss_val.append(loss_val1)
-                    # print "validation loss:", loss_val1
-
-                    # testing
-                    test_x, test_y, test_prev_y, encoder_states_test= Data.testing()
-                    # print(test_x.shape)
-                    # print(test_y.shape)
-                    feed_dict = {encoder_input: test_x, decoder_gt: test_y, decoder_input: test_prev_y,
-                                encoder_attention_states:encoder_states_test}
-                    pred_y=sess.run(pred, feed_dict)
-                    loss_test1 = sess.run(cost, feed_dict)/len(test_y)
-                    loss_test.append(loss_test1)
-                    # print "Testing loss:", loss_test1
-        
-                    #save the parameters
-                    # if loss_val1<=min(loss_val):
-                        # save_path = saver.save(sess, model_path  + 'dual_stage_' + str(step) + '.ckpt')
-        
-                    mean, stdev = Data.returnMean()
-                    # print mean
-                    # print stdev
-        
-                    testing_result = test_y*stdev[num_feature] + mean[num_feature]
-                    pred_result = pred_y*stdev[num_feature] + mean[num_feature]
-                    
-        
-                    # print "testing data:"
-                    # print testing_result
-                    # print testing_result.shape
-        
-                    # print "pred data:"
-                    # print pred_result
-                    # print pred_result.shape
-                    # from sklearn.utils import check_arrays
         
                     if loss_val1 < mn_validation_loss:
 
                         mn_validation_loss = loss_val1
 
+                        # testing
+                        test_x, test_y, test_prev_y, encoder_states_test= Data.testing()
+                        feed_dict = {encoder_input: test_x, decoder_gt: test_y, decoder_input: test_prev_y,
+                                    encoder_attention_states:encoder_states_test}
+                        pred_y=sess.run(pred, feed_dict)
+                        loss_test1 = sess.run(cost, feed_dict)/len(test_y)
+
+                        mean, stdev = Data.returnMean()
+                        testing_result = test_y*stdev[num_feature] + mean[num_feature]
+                        pred_result = pred_y*stdev[num_feature] + mean[num_feature]
+
                         ret_y_pred = pred_result.copy()
                         ret_y_test = testing_result.copy()
 
                         mae = mean_absolute_error(testing_result, pred_result)
-                        print('mae', mae)
-                        maes.append(mae)
-
-                        rmse = np.sqrt(mean_squared_error(testing_result, pred_result))
-                        # print('rmse', rmse)
-                        rmses.append(rmse)
-
-                        mape = mean_absolute_percentage_error(testing_result, pred_result)
-                        # print('mape', mape)
-                        mapes.append(mape)
-
+                        print('testing mae', mae)
         
                 step += 1
                 count += 1
@@ -272,7 +240,6 @@ def go(dataset, horizon):
                 if count > 10000:
                     learning_rate *= 0.1
                     count = 0
-                    # save_path = saver.save(sess, model_path  + 'dual_stage_' + str(step) + '.ckpt')
         
             print ("Optimization Finished!")
             all_y_pred.append(ret_y_pred.flatten())
@@ -284,19 +251,6 @@ def go(dataset, horizon):
             corr = CORR(np.array(all_y_test) ,np.array(all_y_pred))
             print('current score', rrse, corr)
 
-            # ret_maes.append(min(maes))
-            # ret_rmses.append(min(rmses))
-            # ret_mapes.append(min(mapes))
-            # print(all_y_pred)
-            # input()
-            # print(all_y_test)
-            # input()
-    
-    # print(ret_maes, ret_rmses, ret_mapes)
-    # return np.mean(ret_maes), np.mean(ret_rmses), np.mean(ret_mapes)
-    # df = pd.DataFrame(all_pred_val, columns=["pred_val"])
-    # df.insert(loc=1, column='test_val', value=all_test_val)
-    # df.to_csv('./result/nas.csv', index=False) #/US10YT=RR_30days
     return np.array(all_y_pred), np.array(all_y_test)
 
 if __name__ == '__main__':
@@ -310,7 +264,7 @@ if __name__ == '__main__':
     #horizons = [3, 6, 12, 24]
 
     f = open('log', 'a+')
-    f.write('dataset,horizon,mae,rmse,mape\n')
+    f.write('dataset,horizon,mae,rmse,mape,rrse,corr\n')
     for dataset in datasets:
         for horizon in horizons:
             print(dataset, horizons)
