@@ -61,8 +61,6 @@ class Input_data:
         self.val = (self.val - self.mean)/self.stdev
         print(self.train.shape, self.val.shape, self.test.shape)
 
-        
-                         
     def next_batch(self):
         # generate of a random index from the range [0, self.n_train -self.n_step_decoder +1]                 
         if self.n_label == 1:
