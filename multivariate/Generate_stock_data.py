@@ -3,7 +3,10 @@ import random
 import pandas as pd
 class Input_data:
     def __init__(self, batch_size, n_step_encoder, n_step_decoder, n_hidden_encoder, i, filename, timestep=None, horizon=3):
+
         self.horizon = horizon
+        self.n_label = 1
+
         # read the data 
         data = pd.read_csv(filename, header=None)
         data = data[[j for j in  range(data.shape[1]) if j != i] + [i]]
@@ -19,14 +22,6 @@ class Input_data:
         self.val = self.data[train_size:val_size, :]
         self.test = self.data[val_size:, :]
         
-        # self.train = self.data[0:35072, :]
-        # self.val = self.data[35072:37760, :]
-        # self.test = self.data[37830:40448, :]
-
-        # self.train = self.data[i : self.train_day+i, :]
-        # self.val = self.data[(self.train_day + i ):(self.train_day + self.val_day + i),:]
-        # self.test = self.data[(self.train_day + self.val_day+ i) :(self.train_day + self.val_day + self.test_day+i),:]
-        
         # parameters for the network                 
         self.batch_size = batch_size
         self.n_hidden_state = n_hidden_encoder
@@ -38,10 +33,7 @@ class Input_data:
         self.n_val = len(self.val)
         self.n_test = len(self.test)
         self.n_feature = self.data.shape[1]- 1
-        if timestep:
-            self.n_label = timestep
-        else:
-            self.n_label = 1
+
         
         # data normalization
         self.mean = np.mean(self.train,axis=0)
@@ -61,28 +53,27 @@ class Input_data:
 
     def next_batch(self):
         # generate of a random index from the range [0, self.n_train -self.n_step_decoder +1]                 
-        if self.n_label == 1:
-            index = random.sample(list(np.arange(0,self.n_train-self.n_step_decoder-self.horizon+1)),self.batch_size)  
-            # index = np.arange(0,self.n_train-self.n_step_decoder) 
-            np.random.shuffle(index)
-            index = np.array(index)
-            # the shape of batch_x, label, previous_y                 
+        index = random.sample(list(np.arange(0,self.n_train-self.n_step_decoder-self.horizon+1)),self.batch_size)  
+        # index = np.arange(0,self.n_train-self.n_step_decoder) 
+        np.random.shuffle(index)
+        index = np.array(index)
+        # the shape of batch_x, label, previous_y                 
 
-            # batch_x = np.zeros([index.shape[0],self.n_step_encoder, self.n_feature])
-            # label = np.zeros([index.shape[0], self.n_label])
-            # previous_y = np.zeros([index.shape[0],self.n_step_decoder, self.n_label])                      
-            batch_x = np.zeros([self.batch_size,self.n_step_encoder, self.n_feature])
-            label = np.zeros([self.batch_size, self.n_label])
-            previous_y = np.zeros([self.batch_size,self.n_step_decoder, self.n_label])                      
+        # batch_x = np.zeros([index.shape[0],self.n_step_encoder, self.n_feature])
+        # label = np.zeros([index.shape[0], self.n_label])
+        # previous_y = np.zeros([index.shape[0],self.n_step_decoder, self.n_label])                      
+        batch_x = np.zeros([self.batch_size,self.n_step_encoder, self.n_feature])
+        label = np.zeros([self.batch_size, self.n_label])
+        previous_y = np.zeros([self.batch_size,self.n_step_decoder, self.n_label])                      
 
-            temp = 0
-            for item in index:
-                batch_x[temp,:,:] = self.train[item:item+self.n_step_encoder, :self.n_feature]             
-                previous_y[temp,:,0] = self.train[item:item + self.n_step_decoder, -1]
-                temp += 1
-            label[:,0] = np.array(self.train[index + self.n_step_decoder + self.horizon - 1, -1])                 
-            encoder_states = np.swapaxes(batch_x, 1, 2)
-            return batch_x, label, previous_y, encoder_states
+        temp = 0
+        for item in index:
+            batch_x[temp,:,:] = self.train[item:item+self.n_step_encoder, :self.n_feature]             
+            previous_y[temp,:,0] = self.train[item:item + self.n_step_decoder, -1]
+            temp += 1
+        label[:,0] = np.array(self.train[index + self.n_step_decoder + self.horizon - 1, -1])                 
+        encoder_states = np.swapaxes(batch_x, 1, 2)
+        return batch_x, label, previous_y, encoder_states
 
     def returnMean(self):
         return self.mean, self.stdev
@@ -104,33 +95,17 @@ class Input_data:
         return val_x, val_label, val_prev_y, encoder_states_val
         
     def testing(self):
-        if self.n_label == 1:
-            index = np.arange(0,self.n_test-self.n_step_decoder-self.horizon+1)
-            index_size = len(index)
-            test_x = np.zeros([index_size, self.n_step_encoder, self.n_feature])
-            test_label = np.zeros([index_size, self.n_label])
-            test_prev_y = np.zeros([index_size, self.n_step_decoder, self.n_label])
-            temp = 0
-            for item in index:
-                test_x[temp,:,:] = self.test[item:item + self.n_step_encoder, :self.n_feature]
-                test_prev_y[temp,:,0] = self.test[item:item + self.n_step_decoder, -1]        
-                temp += 1
+        index = np.arange(0,self.n_test-self.n_step_decoder-self.horizon+1)
+        index_size = len(index)
+        test_x = np.zeros([index_size, self.n_step_encoder, self.n_feature])
+        test_label = np.zeros([index_size, self.n_label])
+        test_prev_y = np.zeros([index_size, self.n_step_decoder, self.n_label])
+        temp = 0
+        for item in index:
+            test_x[temp,:,:] = self.test[item:item + self.n_step_encoder, :self.n_feature]
+            test_prev_y[temp,:,0] = self.test[item:item + self.n_step_decoder, -1]        
+            temp += 1
 
-            test_label[:, 0] = np.array(self.test[index + self.n_step_decoder + self.horizon - 1, -1])
-            encoder_states_test = np.swapaxes(test_x,1,2)
-            return test_x, test_label, test_prev_y, encoder_states_test
-        else:
-            index = np.arange(0,self.n_test-self.n_step_decoder-self.n_label)
-            index_size = len(index)
-            test_x = np.zeros([index_size, self.n_step_encoder, self.n_feature])
-            test_label = np.zeros([index_size, self.n_label])
-            test_prev_y = np.zeros([index_size, self.n_step_decoder, 1])
-            temp = 0
-            for item in index:
-                test_x[temp,:,:] = self.test[item:item + self.n_step_encoder, :self.n_feature]
-                test_prev_y[temp,:,0] = self.test[item:item + self.n_step_decoder, -1]        
-                test_label[temp, :] = np.array(self.test[item+ self.n_step_decoder:item+ self.n_step_decoder + self.n_label, -1])
-                temp += 1
-
-            encoder_states_test = np.swapaxes(test_x,1,2)
-            return test_x, test_label, test_prev_y, encoder_states_test
+        test_label[:, 0] = np.array(self.test[index + self.n_step_decoder + self.horizon - 1, -1])
+        encoder_states_test = np.swapaxes(test_x,1,2)
+        return test_x, test_label, test_prev_y, encoder_states_test
