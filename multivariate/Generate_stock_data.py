@@ -64,7 +64,7 @@ class Input_data:
         # generate of a random index from the range [0, self.n_train -self.n_step_decoder +1]                 
 
         if self.n_label == 1:
-            index = random.sample(np.arange(0,self.n_train-self.n_step_decoder),self.batch_size)  
+            index = random.sample(list(np.arange(0,self.n_train-self.n_step_decoder)),self.batch_size)  
             index = np.array(index)
             # the shape of batch_x, label, previous_y                 
             batch_x = np.zeros([self.batch_size,self.n_step_encoder, self.n_feature])
@@ -79,7 +79,7 @@ class Input_data:
             encoder_states = np.swapaxes(batch_x, 1, 2)
             return batch_x, label, previous_y, encoder_states
 
-        index = random.sample(np.arange(0,self.n_train-self.n_step_decoder-self.n_label),self.batch_size)  
+        index = random.sample(list(np.arange(0,self.n_train-self.n_step_decoder-self.n_label)),self.batch_size)  
         index = np.array(index)
         # the shape of batch_x, label, previous_y                 
         batch_x = np.zeros([self.batch_size,self.n_step_encoder, self.n_feature])
