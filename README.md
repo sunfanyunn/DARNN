@@ -5,9 +5,9 @@ An implementation of the paper
   Yao Qin, Dongjin Song, Haifeng Cheng, Wei Cheng, Guofei Jiang, Garrison. W. Cottrell                 
  International Joint Conference on Artificial Intelligence (IJCAI), 2017. 
 
- run in tf 1.3  
+run in tf 1.3  
 
-Used as baseline in the paper 
+This repository is used to obtain a baseline result for the following paper:
 [A Memory-Network Based Solution for Multivariate Time-Series Forecasting
 ](https://arxiv.org/abs/1809.02105).
 
