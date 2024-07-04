@@ -9,7 +9,7 @@ run in tf 1.3
 
 This repository is used to obtain a baseline result for the following paper:
 [A Memory-Network Based Solution for Multivariate Time-Series Forecasting
-](https://arxiv.org/abs/1809.02105).
+](https://arxiv.org/abs/1809.02105). You can find the (community) implementation of the paper [here](https://github.com/Maple728/MTNet/tree/master).
 
 ## Time Series Datasets
 
